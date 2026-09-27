@@ -1,53 +1,21 @@
 def load_inventory(filename="inventory.txt"):
     """Reads previously saved inventory from file."""
-    inventory = []
+    
+    #inventory = []
     try:
         with open(filename, "r") as f:
             for line in f:
                 line = line.strip()
-                if line:
-                    parts = line.split(",")
-                    if len(parts) == 3:
-                        inventory.append({
-                            "id": parts[0].strip(),
-                            "name": parts[1].strip(),
-                            "quantity": int(parts[2].strip())
-                        })
+                print(line)
     except FileNotFoundError:
         pass
-    return inventory
 
-def display_current_inventory(inventory):
-    """Displays current loaded inventory."""
-    print("Current Order:\n")
-    if not inventory:
-        print("No existing inventory found.\n")
-    else:
-        for item in inventory:
-            print(f"{item['id']}, {item['name']}, {item['quantity']}")
-        print()
-
-def get_valid_input():
-    filename = "inventory.txt"
-    inventory = load_inventory(filename)
-    display_current_inventory(inventory)
-    while True:
-        product_name = input("Enter Product Name: ")
-        if product_name.lower() == 'quit':
-            return 'quit'
-        quantity = input("Enter Quantity: ")
-        next_id = 1001 + len(inventory)
-        new_inventory = {
-            "id": str(next_id),
-            "name": product_name,
-            "quantity": quantity}
-        inventory.append(new_inventory)
-        
-        print(f"\nNew Order Added:\n")
-        print(f"{new_inventory['id']},{new_inventory['name']},{new_inventory['quantity']}\n")
-
-        print("Order successfully added to order.txt.\n")
-        
-while True:      
-    if get_valid_input() == 'quit':
+filename = "inventory.txt"
+load_inventory(filename)
+while True:
+    product_name = input("Enter Product Name: ")
+    if product_name.lower() == 'quit':
         break
+    quantity = int(input("Enter Quantity: ")) 
+    print(f"\nNew Order Added:\n")      
+    print("Order successfully added to order.txt.\n")
