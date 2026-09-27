@@ -1,4 +1,4 @@
-def load_inventory(filename="inventory.txt"):
+def load_inventory(filename):
     """Reads previously saved inventory from file."""
     inventory = []
     try:
@@ -17,8 +17,13 @@ def load_inventory(filename="inventory.txt"):
         pass
     return inventory
 
+def save_inventory(inventory, filename):
+    with open(filename, "w") as f:
+        for item in inventory:
+            f.write(f"{item['id']},{item['name']},{item['quantity']}\n")
+
 def display_current_inventory(inventory):
-    """Displays current loaded inventory."""
+    print("Current Orders:\n")
     if not inventory:
         print("No existing inventory found.\n")
     else:
@@ -26,13 +31,22 @@ def display_current_inventory(inventory):
             print(f"{item['id']}, {item['name']}, {item['quantity']}")
         print()
 
-inventory = load_inventory()
+def get_valid_input():
+    while True:
+        user_input = input("Enter a positive whole number: ")
+        if user_input.isdigit():
+            return int(user_input)
+        print("Error: Invalid input. Please enter a positive whole number.")
+
+filename="inventory.txt"
+inventory = load_inventory(filename)
 display_current_inventory(inventory)
+
 while True:
     product_name = input("Enter Product Name: ")
     if product_name.lower() == 'quit':
         break
-    quantity = int(input("Enter Quantity: ")) 
+    quantity = get_valid_input()
     next_id = 1001 + len(inventory)
     new_inventory = {
         "id": str(next_id),
@@ -41,4 +55,5 @@ while True:
     inventory.append(new_inventory)
     print(f"\nNew Order Added:\n")
     print(f"{new_inventory['id']},{new_inventory['name']},{new_inventory['quantity']}\n")
-    print("Order successfully added to order.txt.\n")
+    save_inventory(inventory, filename)
+    print(f"Order successfully saved to orders.txt")
