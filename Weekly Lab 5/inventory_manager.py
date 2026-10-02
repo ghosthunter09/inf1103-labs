@@ -1,6 +1,21 @@
 import json
 
-# Required functions (keeping exact function names)
+def load_inventory(filename="inventory.json"):
+    """Loads inventory from JSON file if exists, otherwise defaults to initial data."""
+    try:
+        with open(filename, "r") as f:
+            inventory = json.load(f)
+            print("\ninventory.json found.")
+            print("Inventory loaded successfully.")
+            return inventory
+    except FileNotFoundError:
+        # Fallback initial data if file is missing
+        return {
+            "P001": {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
+            "P002": {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
+            "P003": {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25}
+        }
+
 def display_all(inventory):
     print("\nCurrent Inventory")
     print("-" * 40)
@@ -10,8 +25,8 @@ def display_all(inventory):
 
 def add_product(inventory):
     print("\nAdd New Product")
-    product_id = input("Product ID: ")
-    name = input("Product Name: ")
+    product_id = input("Product ID: ").strip()
+    name = input("Product Name: ").strip()
     price = float(input("Price: "))
     stock = int(input("Stock Quantity: "))
     
@@ -25,7 +40,7 @@ def add_product(inventory):
 
 def update_stock(inventory):
     print("\nUpdate Stock")
-    product_id = input("Enter Product ID: ")
+    product_id = input("Enter Product ID: ").strip()
     if product_id in inventory:
         item = inventory[product_id]
         print("\nProduct Found:")
@@ -40,7 +55,7 @@ def update_stock(inventory):
 
 def search_product(inventory):
     print("\nSearch Product")
-    product_id = input("Enter Product ID: ")
+    product_id = input("Enter Product ID: ").strip()
     if product_id in inventory:
         item = inventory[product_id]
         print("\nProduct Found")
@@ -53,12 +68,36 @@ def search_product(inventory):
     else:
         print("\nProduct not found.")
 
+def show_menu():
+    print("\n---------- MENU ----------")
+    print("1. Display All Products")
+    print("2. Add Product")
+    print("3. Update Stock")
+    print("4. Search Product")
+    print("5. Save Inventory")
+    print("6. Exit")
+    print("--------------------------")
 
-    # Initial inventory dictionary with at least 3 items
-inventory = {
-    "P001": {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
-    "P002": {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
-    "P003": {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25}
-}
+
+print("=" * 45)
+print("INVENTORY MANAGEMENT SYSTEM")
+print("=" * 45)
     
-display_all(inventory)
+inventory = load_inventory("inventory.json")
+
+while True:
+    show_menu()
+    choice = input("\nEnter option: ").strip()
+    
+    if choice == "1":
+        display_all(inventory)
+    elif choice == "2":
+        add_product(inventory)
+    elif choice == "3":
+        update_stock(inventory)
+    elif choice == "4":
+        search_product(inventory)
+    elif choice == "6":
+        print("\nThank you for using Inventory Management System.")
+        print("Program terminated.")
+        break
