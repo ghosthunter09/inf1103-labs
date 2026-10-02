@@ -1,7 +1,7 @@
 import json
 
 def load_inventory(filename="inventory.json"):
-    """Loads inventory from JSON file if exists, otherwise defaults to initial data."""
+    """Reads previously saved inventory from JSON file if it exists."""
     try:
         with open(filename, "r") as f:
             inventory = json.load(f)
@@ -9,12 +9,12 @@ def load_inventory(filename="inventory.json"):
             print("Inventory loaded successfully.")
             return inventory
     except FileNotFoundError:
-        # Fallback initial data if file is missing
-        return {
-            "P001": {"id": "P001", "name": "Laptop", "price": 1200.00, "stock": 15},
-            "P002": {"id": "P002", "name": "Mouse", "price": 25.50, "stock": 40},
-            "P003": {"id": "P003", "name": "Keyboard", "price": 45.00, "stock": 25}
-        }
+        return {}
+
+def save_inventory(inventory, filename="inventory.json"):
+    """Saves inventory data to inventory.json."""
+    with open(filename, "w") as f:
+        json.dump(inventory, f, indent=4)
 
 def display_all(inventory):
     print("\nCurrent Inventory")
@@ -78,17 +78,19 @@ def show_menu():
     print("6. Exit")
     print("--------------------------")
 
-
+filename = "inventory.json"
+    
 print("=" * 45)
 print("INVENTORY MANAGEMENT SYSTEM")
 print("=" * 45)
     
-inventory = load_inventory("inventory.json")
+inventory = load_inventory(filename)
+
+show_menu()
 
 while True:
-    show_menu()
     choice = input("\nEnter option: ").strip()
-    
+        
     if choice == "1":
         display_all(inventory)
     elif choice == "2":
@@ -97,7 +99,14 @@ while True:
         update_stock(inventory)
     elif choice == "4":
         search_product(inventory)
+    elif choice == "5":
+        print("\nSaving inventory...")
+        save_inventory(inventory, filename)
+        print("Inventory saved successfully to inventory.json.")
     elif choice == "6":
+        print("\nSaving inventory before exit...")
+        save_inventory(inventory, filename)
+        print("Inventory saved successfully.")
         print("\nThank you for using Inventory Management System.")
         print("Program terminated.")
         break
