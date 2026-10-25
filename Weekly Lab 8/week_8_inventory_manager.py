@@ -49,19 +49,55 @@ class Product:
             stock=data["stock"]
         )
 
+class Inventory:
+    """
+    Manages a collection of Product objects stored in a list.
+    Applies the Single Responsibility Principle (SRP).
+    """
+    def __init__(self):
+        self.products = []  # Collection stored as a list
+
+    def add_product(self, product):
+        """Adds a Product instance to the inventory list."""
+        self.products.append(product)
+
+    def search_product(self, product_id):
+        """Searches for a product by ID in the list and returns the Product object or None."""
+        for product in self.products:
+            # Check against the product's ID
+            if product.product_id == str(product_id):
+                return product
+        return None
+
+    def display_all(self):
+        """Displays all products currently in the inventory list."""
+        print("\nCurrent Inventory")
+        print("-" * 40)
+        if not self.products:
+            print("No products currently in inventory.")
+        else:
+            for product in self.products:
+                product.display_information()
+        print("-" * 40)
+
 
 # --- File Persistence Helpers ---
 
 def load_inventory(filename="inventory.json"):
-    """Reads previously saved inventory from JSON file if it exists."""
+    """Reads saved inventory from JSON file and returns an Inventory object."""
+    inventory = Inventory()
     try:
         with open(filename, "r") as f:
-            inventory = json.load(f)
+            data = json.load(f)
+            for item_data in data:
+                product = Product.from_dict(item_data)
+                inventory.add_product(product)
             print("\ninventory.json found.")
             print("Inventory loaded successfully.")
-            return inventory
     except FileNotFoundError:
-        return {}
+        print("\nNo previous inventory found. Starting with empty inventory.")
+    return inventory
+
 
 def save_inventory(inventory, filename="inventory.json"):
     """Saves inventory data from Inventory object to JSON file."""
@@ -88,13 +124,6 @@ def main():
 
     inventory = load_inventory(filename)
 
-    if not inventory.search_product("P001"):
-        product1 = Product("P001", "Laptop", 1200.00, 15)
-        inventory.add_product(product1)
-
-    if not inventory.search_product("P002"):
-        product2 = Product("P002", "Mouse", 25.50, 40)
-        inventory.add_product(product2)
     
     print("=" * 45)
     print("INVENTORY MANAGEMENT SYSTEM")
