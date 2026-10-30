@@ -1,6 +1,8 @@
 import json
+from abc import ABC, abstractmethod
 
-class Product:
+
+class Product(ABC):
     """
     Represents an individual product in the inventory.
     Demonstrates encapsulation and Single Responsibility Principle (SRP).
@@ -30,6 +32,11 @@ class Product:
         """Prints product information formatted."""
         print(f"ID: {self._product_id} | Name: {self.name} | Price: ${self._price:.2f} | Stock: {self.stock}")
 
+    @abstractmethod
+    def get_fulfilment_info(self):
+        """Returns a message describing how this product is fulfilled."""
+        pass
+
     def to_dict(self):
         """Converts Product object into dictionary format for JSON saving."""
         return {
@@ -38,16 +45,6 @@ class Product:
             "price": self._price,
             "stock": self.stock
         }
-
-    @classmethod
-    def from_dict(cls, data):
-        """Creates a Product instance from dictionary data."""
-        return cls(
-            product_id=data["id"],
-            name=data["name"],
-            price=data["price"],
-            stock=data["stock"]
-        )
     
 class PhysicalProduct(Product):
     """
