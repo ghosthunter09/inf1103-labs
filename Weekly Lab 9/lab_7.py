@@ -1,6 +1,10 @@
 import json
 from abc import ABC, abstractmethod
-
+ 
+ 
+# ---------------------------------------------------------------------------
+# Interface-style abstract base class (Section 4)
+# ---------------------------------------------------------------------------
 class CanBeShipped(ABC):
     """
     Interface-style contract: any class that can be shipped must be able
@@ -11,51 +15,63 @@ class CanBeShipped(ABC):
     def calculate_shipping_cost(self):
         """Return the cost of shipping this object."""
         pass
-
+ 
+ 
+# ---------------------------------------------------------------------------
+# Abstract base class (Section 3)
+# ---------------------------------------------------------------------------
 class Product(ABC):
     """
-    Represents an individual product in the inventory.
-    Demonstrates encapsulation and Single Responsibility Principle (SRP).
+    Abstract base class for all products in the inventory.
+    Holds the attributes and behaviour common to every product type.
+    Demonstrates encapsulation, SRP and OCP (closed for modification,
+    open for extension through subclasses).
     """
+ 
     def __init__(self, product_id, name, price, stock):
         self._product_id = str(product_id)
         self.name = str(name)
         self._price = float(price)
         self.stock = int(stock)
-
+ 
     @property
     def product_id(self):
         return self._product_id
-
+ 
     @property
     def price(self):
         return self._price
-        
+ 
     def update_stock(self, new_stock):
         """Updates the stock quantity for this product."""
         if new_stock >= 0:
             self.stock = int(new_stock)
         else:
             print("Stock quantity cannot be negative.")
-
+ 
     def display_information(self):
-        """Prints product information formatted."""
-        print(f"ID: {self._product_id} | Name: {self.name} | Price: ${self._price:.2f} | Stock: {self.stock}")
-
+        """Prints the common product information (subclasses extend this)."""
+        print(f"ID: {self._product_id} | Name: {self.name} | "
+              f"Price: ${self._price:.2f} | Stock: {self.stock}", end="")
+ 
     @abstractmethod
     def get_fulfilment_info(self):
         """Returns a message describing how this product is fulfilled."""
         pass
-
+ 
     def to_dict(self):
-        """Converts Product object into dictionary format for JSON saving."""
+        """Converts the common product data into a dictionary for JSON saving."""
         return {
             "id": self._product_id,
             "name": self.name,
             "price": self._price,
             "stock": self.stock
         }
-    
+ 
+ 
+# ---------------------------------------------------------------------------
+# Concrete subclasses (Sections 1 & 2)
+# ---------------------------------------------------------------------------
 class PhysicalProduct(Product, CanBeShipped):
     """
     A product that is stored and shipped.
@@ -92,7 +108,8 @@ class PhysicalProduct(Product, CanBeShipped):
     def from_dict(cls, data):
         return cls(data["id"], data["name"], data["price"],
                    data["stock"], data["weight"])
-
+ 
+ 
 class DigitalProduct(Product):
     """A product delivered digitally via download."""
     PRODUCT_TYPE = "digital"
@@ -119,7 +136,8 @@ class DigitalProduct(Product):
     def from_dict(cls, data):
         return cls(data["id"], data["name"], data["price"],
                    data["stock"], data["download_size"])
-
+ 
+ 
 # Maps the saved "type" identifier to the class that rebuilds it.
 # A new product type only needs one new entry here (OCP-friendly).
 PRODUCT_TYPES = {
@@ -134,66 +152,72 @@ def product_from_dict(data):
     if product_class is None:
         raise ValueError(f"Unknown product type: {data.get('type')!r}")
     return product_class.from_dict(data)
-
+ 
+ 
+# ---------------------------------------------------------------------------
+# Inventory (Section 5) - manages products, does not implement their behaviour
+# ---------------------------------------------------------------------------
 class Inventory:
     """
     Manages a collection of Product objects stored in a list.
     Applies the Single Responsibility Principle (SRP).
     """
+ 
     def __init__(self):
         self.products = []  # Collection stored as a list
-
+ 
     def add_product(self, product):
         """Adds a Product instance to the inventory list."""
         self.products.append(product)
-
+ 
     def search_product(self, product_id):
-        """Searches for a product by ID in the list and returns the Product object or None."""
+        """Searches for a product by ID and returns the Product object or None."""
         for product in self.products:
-            # Check against the product's ID
             if product.product_id == str(product_id):
                 return product
         return None
-
+ 
     def display_all(self):
         """Displays all products currently in the inventory list."""
         print("\nCurrent Inventory")
-        print("-" * 40)
+        print("-" * 70)
         if not self.products:
             print("No products currently in inventory.")
         else:
             for product in self.products:
                 product.display_information()
-        print("-" * 40)
-
-
+        print("-" * 70)
+ 
+ 
 # --- File Persistence Helpers ---
-
+ 
 def load_inventory(filename="inventory.json"):
     """Reads saved inventory from JSON file and returns an Inventory object."""
     inventory = Inventory()
     try:
         with open(filename, "r") as f:
             data = json.load(f)
-            for item_data in data:
-                product = product_from_dict(item_data)
-                inventory.add_product(product)
-            print("\ninventory.json found.")
-            print("Inventory loaded successfully.")
+        for item_data in data:
+            try:
+                inventory.add_product(product_from_dict(item_data))
+            except (KeyError, ValueError) as error:
+                print(f"Skipping invalid product entry ({error}).")
+        print("\ninventory.json found.")
+        print("Inventory loaded successfully.")
     except FileNotFoundError:
         print("\nNo previous inventory found. Starting with empty inventory.")
     return inventory
-
-
+ 
+ 
 def save_inventory(inventory, filename="inventory.json"):
     """Saves inventory data from Inventory object to JSON file."""
     data_to_save = [product.to_dict() for product in inventory.products]
     with open(filename, "w") as f:
         json.dump(data_to_save, f, indent=4)
-
-
+ 
+ 
 # --- UI and Main Flow ---
-
+ 
 def show_menu():
     print("\n---------- MENU ----------")
     print("1. Display All Products")
@@ -203,44 +227,70 @@ def show_menu():
     print("5. Save Inventory")
     print("6. Exit")
     print("--------------------------")
-
-
+ 
+ 
+def prompt_new_product():
+    """Asks the user for product details and returns the new Product object."""
+    print("\nProduct Type")
+    print("1. Physical Product")
+    print("2. Digital Product")
+    type_choice = input("Choose type: ").strip()
+ 
+    if type_choice not in ("1", "2"):
+        print("\nInvalid product type.")
+        return None
+ 
+    product_id = input("Product ID: ").strip()
+    name = input("Product Name: ").strip()
+    price = float(input("Price: "))
+    stock = int(input("Stock Quantity: "))
+ 
+    if type_choice == "1":
+        weight = float(input("Weight (kg): "))
+        return PhysicalProduct(product_id, name, price, stock, weight)
+ 
+    download_size = float(input("Download Size (MB): "))
+    return DigitalProduct(product_id, name, price, stock, download_size)
+ 
+ 
 def main():
     filename = "inventory.json"
 
+    # 'myProduct = Product()' """Test if Product class can be instantiated (it should not be able to)."""
+ 
     inventory = load_inventory(filename)
-
+ 
     if not inventory.search_product("P001"):
-        product1 = Product("P001", "Laptop", 1200.00, 15)
-        inventory.add_product(product1)
-
+        inventory.add_product(PhysicalProduct("P001", "Laptop", 1200.00, 15, 2.2))
+ 
     if not inventory.search_product("P002"):
-        product2 = Product("P002", "Mouse", 25.50, 40)
-        inventory.add_product(product2)
-    
+        inventory.add_product(PhysicalProduct("P002", "Mouse", 25.50, 40, 0.1))
+ 
+    if not inventory.search_product("P003"):
+        inventory.add_product(DigitalProduct("P003", "Photo Editor", 49.99, 100, 350.0))
+ 
     print("=" * 45)
     print("INVENTORY MANAGEMENT SYSTEM")
     print("=" * 45)
-
+ 
     while True:
         show_menu()
         choice = input("\nEnter option: ").strip()
-            
+ 
         if choice == "1":
             inventory.display_all()
-
+ 
         elif choice == "2":
             print("\nAdd New Product")
-            product_id = input("Product ID: ").strip()
-            name = input("Product Name: ").strip()
-            price = float(input("Price: "))
-            stock = int(input("Stock Quantity: "))
-            
-            # Create product object and add to inventory
-            new_product = Product(product_id, name, price, stock)
-            inventory.add_product(new_product)
-            print("\nProduct added successfully!")
-
+            try:
+                new_product = prompt_new_product()
+            except ValueError:
+                print("\nInvalid number entered. Product not added.")
+                continue
+            if new_product:
+                inventory.add_product(new_product)
+                print("\nProduct added successfully!")
+ 
         elif choice == "3":
             print("\nUpdate Stock")
             product_id = input("Enter Product ID: ").strip()
@@ -249,13 +299,16 @@ def main():
                 print("\nProduct Found:")
                 print(f"Name: {product.name}")
                 print(f"Current Stock: {product.stock}")
-                
-                new_stock = int(input("\nNew Stock Quantity: "))
+                try:
+                    new_stock = int(input("\nNew Stock Quantity: "))
+                except ValueError:
+                    print("\nInvalid number entered. Stock not updated.")
+                    continue
                 product.update_stock(new_stock)
                 print("\nStock updated successfully!")
             else:
                 print("\nProduct not found.")
-
+ 
         elif choice == "4":
             print("\nSearch Product")
             product_id = input("Enter Product ID: ").strip()
@@ -270,16 +323,20 @@ def main():
                 print("-" * 70)
             else:
                 print("\nProduct not found.")
-
+ 
         elif choice == "5":
             print("\nSaving inventory...")
             save_inventory(inventory, filename)
             print("Inventory saved successfully to inventory.json.")
-
+ 
         elif choice == "6":
             print("\nThank you for using Inventory Management System.")
             print("Program terminated.")
             break
-
+ 
+        else:
+            print("\nInvalid option. Please choose 1-6.")
+ 
+ 
 if __name__ == "__main__":
     main()
