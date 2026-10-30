@@ -86,6 +86,33 @@ class PhysicalProduct(Product):
         return cls(data["id"], data["name"], data["price"],
                    data["stock"], data["weight"])
 
+class DigitalProduct(Product):
+    """A product delivered digitally via download."""
+    PRODUCT_TYPE = "digital"
+ 
+    def __init__(self, product_id, name, price, stock, download_size):
+        super().__init__(product_id, name, price, stock)
+        self.download_size = float(download_size)  # megabytes
+ 
+    def display_information(self):
+        """Overrides Product.display_information, reusing the parent's output."""
+        super().display_information()
+        print(f" | Download Size: {self.download_size:.2f} MB")
+ 
+    def get_fulfilment_info(self):
+        return "This product is delivered digitally via download."
+ 
+    def to_dict(self):
+        data = super().to_dict()
+        data["type"] = self.PRODUCT_TYPE
+        data["download_size"] = self.download_size
+        return data
+ 
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data["id"], data["name"], data["price"],
+                   data["stock"], data["download_size"])
+
 class Inventory:
     """
     Manages a collection of Product objects stored in a list.
