@@ -1,6 +1,16 @@
 import json
 from abc import ABC, abstractmethod
 
+class CanBeShipped(ABC):
+    """
+    Interface-style contract: any class that can be shipped must be able
+    to calculate its shipping cost. No attributes or implementation here.
+    """
+ 
+    @abstractmethod
+    def calculate_shipping_cost(self):
+        """Return the cost of shipping this object."""
+        pass
 
 class Product(ABC):
     """
@@ -46,7 +56,7 @@ class Product(ABC):
             "stock": self.stock
         }
     
-class PhysicalProduct(Product):
+class PhysicalProduct(Product, CanBeShipped):
     """
     A product that is stored and shipped.
     Inherits from Product (single class inheritance) and signs the
@@ -252,9 +262,12 @@ def main():
             product = inventory.search_product(product_id)
             if product:
                 print("\nProduct Found")
-                print("-" * 40)
+                print("-" * 70)
                 product.display_information()
-                print("-" * 40)
+                print(f"Fulfilment: {product.get_fulfilment_info()}")
+                if isinstance(product, CanBeShipped):
+                    print(f"Shipping Cost: ${product.calculate_shipping_cost():.2f}")
+                print("-" * 70)
             else:
                 print("\nProduct not found.")
 
