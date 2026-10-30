@@ -113,6 +113,21 @@ class DigitalProduct(Product):
         return cls(data["id"], data["name"], data["price"],
                    data["stock"], data["download_size"])
 
+# Maps the saved "type" identifier to the class that rebuilds it.
+# A new product type only needs one new entry here (OCP-friendly).
+PRODUCT_TYPES = {
+    PhysicalProduct.PRODUCT_TYPE: PhysicalProduct,
+    DigitalProduct.PRODUCT_TYPE: DigitalProduct,
+}
+ 
+ 
+def product_from_dict(data):
+    """Creates the correct Product subclass based on the saved 'type'."""
+    product_class = PRODUCT_TYPES.get(data.get("type"))
+    if product_class is None:
+        raise ValueError(f"Unknown product type: {data.get('type')!r}")
+    return product_class.from_dict(data)
+
 class Inventory:
     """
     Manages a collection of Product objects stored in a list.
@@ -154,7 +169,7 @@ def load_inventory(filename="inventory.json"):
         with open(filename, "r") as f:
             data = json.load(f)
             for item_data in data:
-                product = Product.from_dict(item_data)
+                product = product_from_dict(item_data)
                 inventory.add_product(product)
             print("\ninventory.json found.")
             print("Inventory loaded successfully.")
