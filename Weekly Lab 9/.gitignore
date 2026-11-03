@@ -14,7 +14,7 @@ venv/
 .idea/
 
 # Files that I dont want
-.json
-.png
-.txt
-.docx
+*.json
+*.png
+*.txt
+*.docx
